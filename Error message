@@ -1,3 +1,5 @@
+After changing the Gulp version to 4.0.0 I was getting the follwing warnings on command line and most of the images on the page ware missing.
+
 (node:3388) UnhandledPromiseRejectionWarning
 (node:3388) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). (rejection id: 1)
 (node:3388) [DEP0018] DeprecationWarning: Unhandled promise rejections are deprecated. In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code.
@@ -11,3 +13,41 @@
 (node:3388) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). (rejection id: 5)
 (node:3388) UnhandledPromiseRejectionWarning
 (node:3388) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). (rejection id: 6)
+
+
+
+solved this problem by changing the following code in gulpfile.js  minify JS section
+
+
+// Minify JS
+gulp.task('js', function () {
+	var uglifyConfig = {
+		mangle: true,
+		compress: {
+			sequences: true,
+			dead_code: true,
+			conditionals: true,
+			booleans: true,
+			unused: true,
+			if_return: true,
+			join_vars: true,
+			drop_console: false // remove console.* functions
+		}
+	};
+
+    return merge(
+		gulp.src([src + 'js/lib/*.js'])
+			.pipe(uglify(uglifyConfig))
+			.pipe(rename({suffix: '.min'})),
+		gulp.src([src + 'js/**/*.js', '!' + src + 'js/lib/*.js'], { base: src + 'js/'})
+			.pipe(sourcemaps.init())
+			.pipe(concat('main.js'))
+			.pipe(uglify(uglifyConfig))
+			.on('error', notify.onError(function (error) {
+				return 'JS Error \n' + error;
+			}))
+			.pipe(rename({suffix: '.min'}))
+			.pipe(sourcemaps.write('./', {includeContent: false, sourceRoot: theme + src + 'js/'}))
+	)
+	.pipe(gulp.dest(dist + 'js'));
+});
